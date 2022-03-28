@@ -37,12 +37,14 @@ project_keyword = [
 ]
 title_keywords = [
     'Rugpull', 'Honeypot', 'Balance Swapper', 'Liquidity Drainer',
-    'Hidden Mint'
+    'Hidden Mint', 'High Tax Option', 'Potential Honeypot'
 ]
 
 link_keywords = ['Explore:', 'Telegram?']
 tg_not_found = "Explore: Telegram 🤷‍"
 scamcode_keywords = ['Scam Check:', 'scam code detected']
+
+images = ['Hidden Mint', 'Honeypot', 'Liquidity Drainer', 'Potential Honeypot']
 
 
 def get_telegram_link(caption_entities):
@@ -65,7 +67,8 @@ def get_dict(message):
     dict['link'] = "Telegram not found."
     for i in caption:
         if ([kw for kw in title_keywords if kw in i]):
-            dict['title'] = [kw for kw in title_keywords if kw in i][0]
+            dict['title'] = dict['title'] = i[i.index('(') + 1:i.index(')')]
+            dict['image'] = dict['title'] if dict['title'] in images else None
         if ([kw for kw in project_keyword if kw in i]):
             dict['project'] = i.split(":")[1].strip()
         if ([kw for kw in contract_keyword if kw in i]):
@@ -80,15 +83,13 @@ def get_out_put_signal(message):
     dict = get_dict(message)
     sett = get_setting()
     _header = "🚨<u><b>POTENTIAL SCAM WARNING</b></u>🚨"
-    _title = f"<b>Potential {dict['title']} code in contract</b>"
+    _title = f"<b>{dict['title']} code in contract</b>"
     _project = f"<b>Project: {dict['project']}</b>"
     _contract = f"<b>Contract:</b> {dict['contract']}"
-    _link = f"<b>Link:</>{dict['link']}"
+    _link = f"<b>Link:</b> {dict['link']}"
     _bottom = sett['template']
-    if (dict.get('link')):
-        return f"{_header}\n\n{_title}\n\n{_project}\n\n{_link}\n{_contract}\n\n{_bottom}"
-    else:
-        return f"{_header}\n\n{_title}\n\n{_project}\n\n{_contract}\n\n{_bottom}"
+    return dict[
+        'image'], f"{_header}\n\n{_title}\n\n{_project}\n\n{_link}\n{_contract}\n\n{_bottom}"
 
 
 @user.on_message(filters.chat(config.SOURCE_CHANNEL) & filters.forwarded)
@@ -97,12 +98,21 @@ def scam_check(user, message):
     if ([kw for kw in title_keywords if kw in message.caption]
             and [kw for kw in scamcode_keywords if kw in message.caption]
             and [kw for kw in link_keywords if kw in message.caption]):
-        out_put_signal = get_out_put_signal(message)
-        for des in all_chats():
-            user.send_message(chat_id=int(des['id']),
-                              text=out_put_signal,
-                              disable_web_page_preview=True,
-                              parse_mode='html')
+        image, caption = get_out_put_signal(message)
+        destinations = all_chats()
+        if (image):
+            for des in destinations:
+                bot.send_photo(chat_id=int(des['id']),
+                               photo='/asset/{image}.png',
+                               caption=caption,
+                               disable_web_page_preview=True,
+                               parse_mode='html')
+        else:
+            for des in destinations:
+                bot.send_message(chat_id=int(des['id']),
+                                 text=caption,
+                                 disable_web_page_preview=True,
+                                 parse_mode='html')
         print("successfull forwarding....")
     else:
         print("ignore the signal")
@@ -114,22 +124,6 @@ def start(bot, message):
     bot.send_message(chat_id=message.from_user.id,
                      text=f"Hello {message.from_user.first_name}!👋",
                      reply_markup=main_menu_markup)
-
-
-# @bot.on_message(filters.regex('🏠Home'))
-# def home(bot, message):
-#     # chats = all_chats()
-#     # channels = [i for i in chats if i['type'] == 'channel']
-#     # groups = [i for i in chats if i['type'] ==
-#     #           'group' or i['type'] == 'supergroup']
-#     # print(channels)
-#     # print(groups)
-#     # sett = get_setting()
-#     # text = f"#channels: {len(channels)}\n#groups: {len(groups)}\n#Bot: {'ON' if sett['status']  else 'OFF'}\n#Forwarded: {sett.get('num_forwarded') if sett.get('num_forwarded') else 0}"
-#     bot.send_message(
-#         chat_id=message.from_user.id,
-#         text=""
-#     )
 
 
 @bot.on_message(filters.regex('⚙️Settings'))
@@ -164,27 +158,6 @@ def set_bot_status_setting(bot, callback_query):
         message_id=callback_query.message.message_id,
         text=f"⚙️Setting\n\n{note}\n\n👇set the status of the bot.",
         reply_markup=reply_markup)
-
-
-# @bot.on_message(filters.forwarded)
-# def create_channel_group(bot, message):
-#     _chat = message.forward_from_chat
-#     data = {
-#         'id': _chat.id,
-#         'type': _chat.type,
-#         'title': _chat.title,
-#         'username': _chat.username
-#     }
-#     if(store_chats(data)):
-#         text = f"✅ the {_chat.type} @{_chat.username} created sucessfully."
-
-#     else:
-#         text = f"❌ the {_chat.type} @{_chat.username} already created sucessfully."
-
-#     bot.send_message(
-#             chat_id=message.from_user.id,
-#             text=text,
-#         )
 
 
 @bot.on_message(filters.regex('Channels'))
