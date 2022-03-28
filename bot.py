@@ -1,5 +1,3 @@
-from html import entities
-from pickle import TRUE
 from pyrogram import Client, filters, errors
 import config
 from decorators import bot_owners_only, bot_status_on
@@ -101,18 +99,18 @@ def scam_check(user, message):
         image, caption = get_out_put_signal(message)
         destinations = all_chats()
         if (image):
+            photo = open(f"assets/{image}.png","r+b")
             for des in destinations:
                 bot.send_photo(chat_id=int(des['id']),
-                               photo='/asset/{image}.png',
+                               photo=photo,
                                caption=caption,
-                               disable_web_page_preview=True,
                                parse_mode='html')
         else:
             for des in destinations:
                 bot.send_message(chat_id=int(des['id']),
-                                 text=caption,
-                                 disable_web_page_preview=True,
-                                 parse_mode='html')
+                                    text=caption,
+                                    disable_web_page_preview=True,
+                                    parse_mode='html')
         print("successfull forwarding....")
     else:
         print("ignore the signal")
