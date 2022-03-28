@@ -79,7 +79,6 @@ def get_dict(message):
 def get_out_put_signal(message):
     dict = get_dict(message)
     sett = get_setting()
-    print(dict)
     _header = "🚨<u><b>POTENTIAL SCAM WARNING</b></u>🚨"
     _title = f"<b>Potential {dict['title']} code in contract</b>"
     _project = f"<b>Project: {dict['project']}</b>"
@@ -95,7 +94,6 @@ def get_out_put_signal(message):
 @user.on_message(filters.chat(config.SOURCE_CHANNEL) & filters.forwarded)
 @bot_status_on
 def scam_check(user, message):
-    print(message)
     if ([kw for kw in title_keywords if kw in message.caption]
             and [kw for kw in scamcode_keywords if kw in message.caption]
             and [kw for kw in link_keywords if kw in message.caption]):

@@ -9,6 +9,7 @@ def bot_owners_only(func):
     def wrapper(bot, message):
         chat_id = message.from_user.id
         bot_owners = [int(i) for i in config.BOT_OWNERS.split(',')]
+        print(chat_id)
         print(bot_owners)
         if (int(chat_id) in bot_owners):
             return func(bot, message)
